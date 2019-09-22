@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.HashSet;
 import javax.swing.JOptionPane;
 /*
  * FrmJogo.java
@@ -42,9 +41,9 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
               
         for(int i = 0; i<4; i++){
             for(int j = 0; j<5; j++){
-            inimigo.add(new Inimigo(Color.BLACK));
-            inimigo.get(i*4+j).setX((getWidth()/5)*j + 50);
-            inimigo.get(i*4+j).setY(-10-i*100);
+                inimigo.add(new Inimigo(Color.BLACK));
+                inimigo.get(i*4+j).setX((getWidth()/5)*j + 50);
+                inimigo.get(i*4+j).setY(-10-i*100);
             }
         }
         
@@ -142,7 +141,9 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
         
         long ultimoTiro  = System.currentTimeMillis();
         long tiroCorrente= 0;
-   
+        long tiroCorrentecChefao = 0;
+        long ultimoTiroChefao = System.currentTimeMillis();
+        ArrayList<Tiro> tirosControle = new ArrayList<Tiro>();
         while(true) {
             
             Graphics g = getBufferStrategy().getDrawGraphics();
@@ -150,7 +151,7 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
             //Limpa a Tela
             g.setColor(Color.YELLOW);
             g.fillRect(0,0,this.getWidth(),this.getHeight());
-
+            //tiros
             if(tiro)
             {
                tiroCorrente = System.currentTimeMillis(); 
@@ -162,10 +163,29 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
                     t.setY(nave.getY()-t.getAltura() - 1);
                     t.setIncY(-1);
                     t.setIncX(0);
+                    tirosControle.add(t);
+                    
                     elementos.add(t);
                }
             }
+            if(elementos.contains(chefao))
+            {
+                tiroCorrentecChefao = System.currentTimeMillis();
+                if(tiroCorrentecChefao > ultimoTiroChefao +1000){
+                    ultimoTiroChefao  = System.currentTimeMillis();
+                    for(int i=chefao.getX();i<=chefao.getX()+chefao.getLargura();i+= (chefao.getX()+chefao.getLargura())/5)
+                    {
+                        Tiro t = new Tiro(10,5);
+                        t.setX(i);
+                        t.setY(chefao.getY()+chefao.getAltura());
+                        t.setIncY(1);
+                        t.setIncX(0);
+                        elementos.add(t);
+                    }
+                }
+            }
             
+            //movimento
             for(Elemento e: elementos) {
                 e.desenhar(g);
             }
@@ -175,13 +195,54 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
             }
         
             if(esquerdaPressed)
-                nave.setIncX(-1);
+                nave.setIncX(-3);
             else
               if(direitaPressed)
-                  nave.setIncX(1);
+                  nave.setIncX(3);
               else
                   nave.setIncX(0);
-              
+            //colisões
+            for(int t=0;t<tirosControle.size();t++)
+            {   
+                
+                
+                boolean remove = false;
+                if(tirosControle.get(t).y < 0)
+                {
+                    remove=true;
+                }
+                
+                for(int ini=0;ini< inimigo.size();ini++)
+                {
+                    if(tirosControle.get(t).colisao(inimigo.get(ini)))
+                    {
+                        elementos.remove(inimigo.get(ini));
+                        inimigo.remove(ini);
+                        remove =true;
+                    }
+                }
+                if(remove){
+                    elementos.remove(tirosControle.get(t));
+                    tirosControle.remove(t);
+                    
+                }
+            }
+            //Chefao
+            if(inimigo.isEmpty() && !elementos.contains(chefao))
+            {
+                chefao.setColor(Color.RED);
+                chefao.setAltura(150);
+                chefao.setLargura(150);
+                chefao.setX(getWidth()/2);
+                chefao.setX(150);
+                chefao.setIncX(1);
+                chefao.setIncY(0);
+                elementos.add(chefao);
+                
+                
+            }
+            
+            
             for(Inimigo ini: inimigo){
                 if(nave.colisao(ini))
                 {
@@ -191,9 +252,9 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
                     inimigo.clear();
                     for(int i = 0; i<4; i++){
                         for(int j = 0; j<5; j++){
-                        inimigo.add(new Inimigo(Color.BLACK));
-                        inimigo.get(i).setX((getWidth()/5)*j + 20);
-                        inimigo.get(i).setY(-10-i*50);
+                            inimigo.add(new Inimigo(Color.BLACK));
+                            inimigo.get(i).setX((getWidth()/5)*j + 20);
+                            inimigo.get(i).setY(-10-i*50);
                         }
                     }
                 }
@@ -235,7 +296,17 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
                         ini.setIncY(1);
                 }
             }
+            if(elementos.contains(chefao))
+            {
+                if(chefao.getX() > this.getWidth()-chefao.getLargura()) {
+                        chefao.setIncX(-1);
+                }
 
+                if(chefao.getX() < 0) {
+                        chefao.setIncX(1);
+                }
+            }
+            
             g.dispose();
             getBufferStrategy().show();
             try {
