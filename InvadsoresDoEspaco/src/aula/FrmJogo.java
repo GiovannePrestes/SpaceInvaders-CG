@@ -38,7 +38,26 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
         this.setSize(800,600);
         createBufferStrategy(2);
         
-              
+        createElements();
+        
+        Thread t = new Thread(this);
+        t.start();
+        
+    }
+    void gameOver(int i){
+        if(i==1)
+            JOptionPane.showMessageDialog(this,"YOU WIN!");
+        else
+            JOptionPane.showMessageDialog(this,"GAME OVER!");
+        inimigo.clear();
+        elementos.clear();
+        createElements();
+        chefao = new Chefao();
+        chefao.setVida(10);
+        run();
+    }
+    
+    void createElements(){
         for(int i = 0; i<4; i++){
             for(int j = 0; j<5; j++){
                 inimigo.add(new Inimigo(Color.BLACK));
@@ -47,7 +66,7 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
             }
         }
         
-        
+        elementos.addAll(inimigo);
         nave = new Nave();
         nave.setColor(Color.MAGENTA);
         nave.setLargura(120);
@@ -56,21 +75,7 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
         nave.setY(getHeight()-nave.getAltura());
         nave.setIncX(0);
         nave.setIncY(0);
-        
-        elementos.addAll(inimigo);
         elementos.add(nave);
-        
-        
-        
-        
-        Thread t = new Thread(this);
-        t.start();
-        
-        
-        
-        
-        
-        
     }
     
     /** This method is called from within the constructor to
@@ -139,11 +144,15 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
     
     public void run() {
         
+        direitaPressed = false;
+        esquerdaPressed = false;
+        tiro = false;
         long ultimoTiro  = System.currentTimeMillis();
         long tiroCorrente= 0;
         long tiroCorrentecChefao = 0;
         long ultimoTiroChefao = System.currentTimeMillis();
         ArrayList<Tiro> tirosControle = new ArrayList<Tiro>();
+        ArrayList<Tiro> tirosControleChefao = new ArrayList<Tiro>();
         while(true) {
             
             Graphics g = getBufferStrategy().getDrawGraphics();
@@ -180,11 +189,11 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
                         t.setY(chefao.getY()+chefao.getAltura());
                         t.setIncY(1);
                         t.setIncX(0);
+                        tirosControleChefao.add(t);
                         elementos.add(t);
                     }
                 }
             }
-            
             //movimento
             for(Elemento e: elementos) {
                 e.desenhar(g);
@@ -221,6 +230,14 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
                         remove =true;
                     }
                 }
+                if(tirosControle.get(t).colisao(chefao)){
+                    elementos.remove(tirosControle.get(t));
+                    //chefao.setVida(chefao.getVida()-1);
+                    //if(chefao.getVida()==0){
+                    //    gameOver(1);
+                    //}
+                    break;
+                }
                 if(remove){
                     elementos.remove(tirosControle.get(t));
                     tirosControle.remove(t);
@@ -228,6 +245,13 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
                 }
             }
             //Chefao
+            for(int t=0; t<tirosControleChefao.size(); t++){
+                if(tirosControleChefao.get(t).colisao(nave))
+                {
+                    gameOver(0);
+                }
+            }
+            
             if(inimigo.isEmpty() && !elementos.contains(chefao))
             {
                 chefao.setColor(Color.RED);
@@ -244,19 +268,9 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
             
             
             for(Inimigo ini: inimigo){
-                if(nave.colisao(ini))
+                if(nave.colisao(ini) || ini.getY() > getHeight()-ini.getAltura())
                 {
-                  JOptionPane.showMessageDialog(this,
-                          "GAME OVER!"
-                          );
-                    inimigo.clear();
-                    for(int i = 0; i<4; i++){
-                        for(int j = 0; j<5; j++){
-                            inimigo.add(new Inimigo(Color.BLACK));
-                            inimigo.get(i).setX((getWidth()/5)*j + 20);
-                            inimigo.get(i).setY(-10-i*50);
-                        }
-                    }
+                    gameOver(0);
                 }
             }
             
@@ -292,7 +306,7 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
                         ini.setIncX(1);
                 }
 
-                if(ini.getY() < 0) {
+                if(ini.getY() > 0) {
                         ini.setIncY(1);
                 }
             }

@@ -13,10 +13,20 @@ import java.awt.Graphics;
  */
 public class Chefao extends Elemento {
 
+    private int vida = 10;
     @Override
     public void desenhar(Graphics g) {
          g.setColor(getColor());
          g.fillOval(getX(),getY(),getLargura(),getAltura());
     }
+
+    public int getVida() {
+        return vida;
+    }
+
+    public void setVida(int vida) {
+        this.vida = vida;
+    }
+    
     
 }
