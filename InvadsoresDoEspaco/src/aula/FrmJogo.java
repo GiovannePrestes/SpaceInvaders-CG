@@ -53,7 +53,7 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
         elementos.clear();
         createElements();
         chefao = new Chefao();
-        chefao.setVida(10);
+        chefao.setVida(10000);
         run();
     }
     
@@ -232,11 +232,10 @@ public class FrmJogo extends javax.swing.JFrame implements Runnable {
                 }
                 if(tirosControle.get(t).colisao(chefao)){
                     elementos.remove(tirosControle.get(t));
-                    //chefao.setVida(chefao.getVida()-1);
-                    //if(chefao.getVida()==0){
-                    //    gameOver(1);
-                    //}
-                    break;
+                    chefao.setVida(chefao.getVida()-1);
+                    if(chefao.getVida()==0){
+                        gameOver(1);
+                    }
                 }
                 if(remove){
                     elementos.remove(tirosControle.get(t));
